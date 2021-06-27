@@ -1,6 +1,8 @@
 package com.feed;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.logging.Logger;
 
 import javax.servlet.Filter;
@@ -13,6 +15,7 @@ import javax.servlet.annotation.WebFilter;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.json.JSONObject;
 import org.mindrot.jbcrypt.BCrypt;
 
 
@@ -32,6 +35,16 @@ public class RegisterFilter implements Filter {
 		
         HttpServletRequest req = (HttpServletRequest) request;
         HttpServletResponse res = (HttpServletResponse) response;
+        
+	    StringBuffer jb = new StringBuffer();
+	    PrintWriter out=response.getWriter();
+	    String line = null;
+	    BufferedReader reader = req.getReader();
+	    while ((line = reader.readLine()) != null)
+	        jb.append(line);
+	    String message=jb.toString();
+        
+        
         if(req.getMethod().equalsIgnoreCase("POST"))
         {
             
@@ -47,10 +60,10 @@ public class RegisterFilter implements Filter {
 	        }
 	        else
 	        {
-	        	
+	        	HMACAlgorithm hash=new HMACAlgorithm();
                 String token=req.getHeader("Authorization");
-
-	        	if(token!=null && BCrypt.checkpw(sync.recieveKey, token))
+               
+	        	if(token!=null && token==hash.calculateHMAC(sync.recieveKey,message))
 	        	{
 	                logger.info("Authorization succesfull");
 	        		chain.doFilter(request, response);
