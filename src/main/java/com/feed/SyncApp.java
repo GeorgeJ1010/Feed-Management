@@ -72,7 +72,7 @@ public class SyncApp {
         conn.setRequestProperty("Accept", "application/json");
         conn.setRequestProperty("Authorization",  BCrypt.hashpw(sync.sentKey,BCrypt.gensalt(10)));
     	conn.setRequestMethod("POST");
-    	conn.setReadTimeout(30000);
+    	conn.setReadTimeout(2000);
     	StringBuilder response =null;
 		JSONObject obj1=new JSONObject();
 		int code = 500;
