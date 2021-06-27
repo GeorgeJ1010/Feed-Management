@@ -65,12 +65,13 @@ public class SyncApp {
 	 */
      public JSONObject sentRequest(URL url, JSONObject obj) throws IOException
 	 {
-         SyncApp sync=new SyncApp();
+        SyncApp sync=new SyncApp();
+        HMACAlgorithm hash=new HMACAlgorithm();
     	HttpURLConnection conn = (HttpURLConnection) url.openConnection();
     	conn.setDoOutput(true);
     	conn.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
         conn.setRequestProperty("Accept", "application/json");
-        conn.setRequestProperty("Authorization",  BCrypt.hashpw(sync.sentKey,BCrypt.gensalt(10)));
+        conn.setRequestProperty("Authorization", hash.calculateHMAC(sync.sentKey,obj.toString()));
     	conn.setRequestMethod("POST");
     	conn.setReadTimeout(30000);
     	StringBuilder response =null;
