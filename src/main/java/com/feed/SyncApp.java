@@ -27,7 +27,7 @@ public class SyncApp {
      URLFetchService fetcher = URLFetchServiceFactory.getURLFetchService(); 
 
 
-/*	 public JSONObject sentRequest(HTTPRequest req) throws IOException
+	 public JSONObject sentRequest(HTTPRequest req) throws IOException
 	 {
 		JSONObject obj1=new JSONObject();
 		int code = 500;
@@ -62,7 +62,9 @@ public class SyncApp {
 		}
 		return obj1;
 	 }
-	 */
+	 
+	 
+	 /*
      public JSONObject sentRequest(URL url, JSONObject obj) throws IOException
 	 {
         SyncApp sync=new SyncApp();
@@ -121,5 +123,7 @@ public class SyncApp {
 		}
 		return obj1;
 	 }
+	 
+	 */
      
 }

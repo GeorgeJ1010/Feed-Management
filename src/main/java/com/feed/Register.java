@@ -20,7 +20,7 @@ import javax.servlet.http.HttpSession;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import com.google.appengine.api.datastore.FetchOptions;
+import com.google.appengine.api.urlfetch.FetchOptions;
 import com.google.appengine.api.urlfetch.HTTPHeader;
 import com.google.appengine.api.urlfetch.HTTPMethod;
 import com.google.appengine.api.urlfetch.HTTPRequest;
@@ -117,17 +117,20 @@ public class Register extends HttpServlet {
 					{
 			              final String uri="https://malkarajtraining12.uc.r.appspot.com/register";
 			              URL url=new URL(uri); 
-						  //HTTPRequest req = new HTTPRequest(url, HTTPMethod.POST);
-						
-						  //req.addHeader(new HTTPHeader("Authorization", BCrypt.hashpw(sync.sentKey,BCrypt.gensalt(10))));
+			              
+			              FetchOptions options = FetchOptions.Builder.withDefaults();
+			              options.setDeadline(2d);
+			              options.doNotFollowRedirects();
+			   			  HTTPRequest req = new HTTPRequest(url, HTTPMethod.POST,options);
+						  HMACAlgorithm hash=new HMACAlgorithm();
                           JSONObject reqObj=new JSONObject();
 						  reqObj.put("email", email);
 						  reqObj.put("password", pass);
 						  reqObj.put("user_id", id);
-						  //req.setPayload(reqObj.toString().getBytes());
-						 
-						  //obj1=sync.sentRequest(req);
-						  obj1=sync.sentRequest(url, reqObj);
+						  req.setPayload(reqObj.toString().getBytes());
+						  req.addHeader(new HTTPHeader("Authorization", hash.calculateHMAC(sync.sentKey, reqObj.toString())));
+						  obj1=sync.sentRequest(req);
+						  //obj1=sync.sentRequest(url, reqObj);
 						  if(obj1.get("success").toString().equals("true"))
 							{
 								log.info("User succesfully registered in cross domain");
