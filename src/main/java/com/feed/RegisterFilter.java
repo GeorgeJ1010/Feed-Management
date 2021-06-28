@@ -52,6 +52,9 @@ public class RegisterFilter implements Filter {
         {
         	logger.info("no app id present");
         }
+                	chain.doFilter(request, response);
+        	chain.doFilter(request, response);
+
         /* 
 	    StringBuffer jb = new StringBuffer();
 	    PrintWriter out=response.getWriter();
