@@ -44,16 +44,27 @@ public class RegisterFilter implements Filter {
         HttpServletRequest req = (HttpServletRequest) request;
         HttpServletResponse res = (HttpServletResponse) response;
         String appId=req.getHeader("X-Appengine-Inbound-Appid");
-        if(appId!=null)
+        
+        if(req.getMethod().equalsIgnoreCase("POST"))
         {
-        	logger.info("appdId:"+appId);
+	            
+	        if(appId!=null && appId.equals("malkarajtraining12"))
+	        {
+	        	chain.doFilter(request, response);
+	        	logger.info("appdId:"+appId);
+	        }
+	        else
+	        {
+	        	logger.info("else part");
+	        	chain.doFilter(request, response);
+	
+	        }
         }
         else
         {
-        	logger.info("no app id present");
-        }
-                	chain.doFilter(request, response);
         	chain.doFilter(request, response);
+
+        }
 
         /* 
 	    StringBuffer jb = new StringBuffer();

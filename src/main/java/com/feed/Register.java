@@ -45,7 +45,6 @@ public class Register extends HttpServlet {
 
         response.setHeader("Access-Control-Allow-Origin", "*");
         response.setHeader("Access-Control-Allow-Methods", "*");
-        response.setHeader("Access-Control-Expose-Headers","Origin");
         response.setHeader("Access-Control-Allow-Headers", "*");
 
 		if(session==null || session.getAttribute("userId")==null) {
@@ -60,11 +59,11 @@ public class Register extends HttpServlet {
 	}
 
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        response.setHeader("Access-Control-Allow-Origin", "*");
+        response.setHeader("Access-Control-Allow-Origin", "https://malkarajtraining12.uc.r.appspot.com/");
         response.setHeader("Access-Control-Allow-Methods", "*");
         response.setHeader("Access-Control-Allow-Headers", "*");
-        response.setHeader("Access-Control-Expose-Headers","Origin");
-        
+		HMACAlgorithm hash=new HMACAlgorithm();
+
         SyncApp sync=new SyncApp();
         
 	    StringBuffer jb = new StringBuffer();
@@ -84,31 +83,43 @@ public class Register extends HttpServlet {
         	String origin = request.getHeader("Origin");
 	    	String email=json.get("email").toString();
 			String pass=BCrypt.hashpw(json.get("password").toString(),BCrypt.gensalt(10));
+			String inboundAppId=request.getHeader("X-Appengine-Inbound-Appid");
 	        if(v.isValidateCredentials(email))
 	        {
 		        DateTime now = new DateTime();
 		        Date date=new Date(now.getMillis());
 				user.setEmail(email);
 				user.setPassword(pass);
-		    	UUID id=UUID.randomUUID();
-
-				if(origin!=null && (origin.equals("https://georgefulltraining12.uc.r.appspot.com") || origin.equals("http://localhost:8080")))
-				{		
-					user.setUserId(id.toString());
-				}
-				else
-				{
-			    	String userId=json.get("user_id").toString();
-					user.setUserId(userId.toString());
-
-				}
 				user.setDate(date);
 				user.setImage("null.png");
 				user.setActive(true);
+		    	UUID id=UUID.randomUUID();
+
+				if(inboundAppId!=null && inboundAppId.equals("malkarajtraining12"))
+				{		
+					String token=request.getHeader("Authorization");
+					if(token.equals(hash.calculateHMAC(sync.recieveKey, json.toString())))
+					{
+				    	String userId=json.get("user_id").toString();
+						user.setUserId(userId.toString());						
+					}
+					else
+					{
+						response.sendError(401);
+					}
+				}
+				else
+				{
+					user.setUserId(id.toString());
+
+
+				}
+
 				JSONObject obj=userOp.addUser(user);
 				JSONObject obj1=new JSONObject();
 				
-				if(obj!=null) {			
+				if(obj!=null) 
+				{			
 					
 					log.info("User succesfully registered");
 					System.out.println("Origin: "+ origin);
@@ -122,7 +133,6 @@ public class Register extends HttpServlet {
 			              options.setDeadline(2d);
 			              options.doNotFollowRedirects();
 			   			  HTTPRequest req = new HTTPRequest(url, HTTPMethod.POST,options);
-						  HMACAlgorithm hash=new HMACAlgorithm();
                           JSONObject reqObj=new JSONObject();
 						  reqObj.put("email", email);
 						  reqObj.put("password", pass);
