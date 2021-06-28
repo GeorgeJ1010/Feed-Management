@@ -75,7 +75,7 @@ public class SyncApp {
         conn.setRequestProperty("Accept", "application/json");
         conn.setRequestProperty("Authorization", hash.calculateHMAC(sync.sentKey,obj.toString()));
     	conn.setRequestMethod("POST");
-    	conn.setReadTimeout(30000);
+    	conn.setReadTimeout(2000);
     	StringBuilder response =null;
 		JSONObject obj1=new JSONObject();
 		int code = 500;
