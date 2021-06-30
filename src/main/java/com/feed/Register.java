@@ -130,7 +130,7 @@ public class Register extends HttpServlet {
 			              URL url=new URL(uri); 
 			              
 			              FetchOptions options = FetchOptions.Builder.withDefaults();
-			              options.setDeadline(2d);
+			              options.setDeadline(10d);
 			              options.doNotFollowRedirects();
 			   			  HTTPRequest req = new HTTPRequest(url, HTTPMethod.POST,options);
                           JSONObject reqObj=new JSONObject();
