@@ -201,10 +201,10 @@ public class Register extends HttpServlet {
     protected void doOptions(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException 
     { 
         // pre-flight request processing
-        resp.setHeader("Access-Control-Allow-Origin", "*");
-        resp.setHeader("Access-Control-Expose-Headers","Origin");
-        resp.setHeader("Access-Control-Allow-Methods", "*");
+        resp.setHeader("Access-Control-Allow-Origin", "https://malkarajtraining12.uc.r.appspot.com/");
+        resp.setHeader("Access-Control-Allow-Methods", "POST");
         resp.setHeader("Access-Control-Allow-Headers", "*");
+        System.out.println("in preflight");
     }
 
 

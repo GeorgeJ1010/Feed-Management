@@ -52,7 +52,7 @@ var userLogin=()=>{
 	}
 }
 
-
+/*
 var userRegister=()=>{
 	var xhr = new XMLHttpRequest();
 	xhr.open("POST", "/register", true);
@@ -81,6 +81,38 @@ var userRegister=()=>{
 
 }
 
+
+*/
+
+var userRegister=()=>{
+		var xhr = new XMLHttpRequest();
+
+	xhr.open("POST", "https://georgefulltraining12.uc.r.appspot.com/register", true);
+	xhr.setRequestHeader('Content-Type', 'application/json');
+	var email=document.getElementById("email").value;
+	var pass=document.getElementById("password").value;
+    xhr.setRequestHeader("Accept","application/json");
+
+ 	if(validate(email,pass)){
+		var obj={"email":email,"password":pass};
+		xhr.send(JSON.stringify(obj));
+		xhr.onload = function() 
+		{
+			var data=JSON.parse(this.responseText);
+		    if(data["success"]==true)
+			{
+
+				window.location.href = "/login";
+	
+			}
+			 else
+			{
+				throwError(data);
+			}
+		}
+	}
+
+}
 
 
 
