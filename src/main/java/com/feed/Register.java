@@ -124,7 +124,7 @@ public class Register extends HttpServlet {
 					log.info("User succesfully registered");
 					System.out.println("Origin: "+ origin);
 					
-					if(origin!=null && origin.equals("https://georgefulltraining12.uc.r.appspot.com"))
+					if(inboundAppId==null || !(inboundAppId.equals("malkarajtraining12")))
 					{
 			              final String uri="https://malkarajtraining12.uc.r.appspot.com/register";
 			              URL url=new URL(uri); 
