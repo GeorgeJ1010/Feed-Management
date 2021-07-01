@@ -3,6 +3,7 @@ package com.feed;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.util.Date;
 import java.util.UUID;
@@ -80,122 +81,152 @@ public class Register extends HttpServlet {
 
         User user=new User();
         try {
-        	String origin = request.getHeader("Origin");
-	    	String email=json.get("email").toString();
-			String pass=BCrypt.hashpw(json.get("password").toString(),BCrypt.gensalt(10));
-			String inboundAppId=request.getHeader("X-Appengine-Inbound-Appid");
-	        if(v.isValidateCredentials(email))
-	        {
-		        DateTime now = new DateTime();
-		        Date date=new Date(now.getMillis());
-				user.setEmail(email);
-				user.setPassword(pass);
-				user.setDate(date);
-				user.setImage("null.png");
-				user.setActive(true);
+        	
+	        	String Origin = request.getHeader("Origin");
+		    	String email=json.get("email").toString();
+				String pass=BCrypt.hashpw(json.get("password").toString(),BCrypt.gensalt(10));
+				String inboundAppId=request.getHeader("X-Appengine-Inbound-Appid");
 		    	UUID id=UUID.randomUUID();
-
-				if(inboundAppId!=null && inboundAppId.equals("malkarajtraining12"))
-				{		
+		    	System.out.println(Origin);
+		        if(v.isValidateCredentials(email))
+		        {
+			        DateTime now = new DateTime();
+			        Date date=new Date(now.getMillis());
+					user.setEmail(email);
+					user.setPassword(pass);
+					user.setDate(date);
+					user.setImage("null.png");
+					user.setActive(true);
+		        }
+		        else
+		        {
+		            JSONObject obj=new JSONObject();
+		            response.setStatus(400);
+		            obj.put("success", false);
+		            obj.put("code", 400);
+		            obj.put("message", "Invalid email id");
+		            out.println(obj);
+	
+		        }
+		        
+	        
+	        
+				JSONObject resp=new JSONObject();
+				
+				if(inboundAppId!=null && inboundAppId.equals("malkarajtraining12")) 
+				{
+					
 					String token=request.getHeader("Authorization");
 					if(token.equals(hash.calculateHMAC(sync.recieveKey, json.toString())))
 					{
 				    	String userId=json.get("user_id").toString();
-						user.setUserId(userId.toString());						
+						user.setUserId(userId.toString());
+						JSONObject obj=userOp.addUser(user);
+						
+						if(obj!=null) 
+						{			
+							
+							log.severe("User Registration succesful");
+							resp.put("message", "User registered successfully");
+							response.setStatus(200);
+							resp.put("success", true);
+							resp.put("code",200);
+							
+							}
+						else
+						{	
+								log.severe("User already present");
+								resp.put("message", "User already present");
+								response.setStatus(400);
+								resp.put("success", false);
+								resp.put("code",400);
+						}
 					}
 					else
 					{
 						response.sendError(401);
 					}
+			
+				}
+				else if(Origin!=null && ( Origin.equals("http://localhost:8080") || Origin.equals("https://georgefulltraining12.uc.r.appspot.com")))
+				{
+					user.setUserId(id.toString());
+					JSONObject obj=userOp.addUser(user);
+					if(obj!=null)
+					{
+							
+						if(inboundAppId==null || !(inboundAppId.equals("malkarajtraining12") ))
+						{
+				             //Creating Request and adding necessery headers
+							  final String uri="https://malkarajtraining12.uc.r.appspot.com/register";
+				              URL url=new URL(uri);
+				              FetchOptions options = FetchOptions.Builder.withDefaults();
+				              options.setDeadline(10d);
+				              options.doNotFollowRedirects();
+				   			  HTTPRequest req = new HTTPRequest(url, HTTPMethod.POST,options);
+	                          JSONObject reqObj=new JSONObject();
+							  reqObj.put("email", email);
+							  reqObj.put("password", pass);
+							  reqObj.put("user_id", id);
+							  req.setPayload(reqObj.toString().getBytes());
+							  req.addHeader(new HTTPHeader("Authorization", hash.calculateHMAC(sync.sentKey, reqObj.toString())));
+							  //
+							  
+							  resp=sync.sentRequest(req);
+							  if(resp.get("success").toString().equals("true"))
+								{
+									log.info("User succesfully registered in cross domain");
+									resp.put("detail", obj);
+									response.setStatus(200);
+								}
+							  else
+								{
+									log.severe("User registration failed due to exceeding retry limit");
+									response.setStatus(Integer.parseInt(resp.get("code").toString()));
+								}						
+						}							
+						
+					}
+					else
+					{	
+							log.severe("User already present");
+							resp.put("message", "User already present");
+							response.setStatus(400);
+							resp.put("success", false);
+							resp.put("code",400);
+					}
 				}
 				else
 				{
-					user.setUserId(id.toString());
-
-
+					resp.put("success", false);
+					resp.put("code", 401);
+					resp.put("detail", "You are not authorized to use this API");
 				}
-
-				JSONObject obj=userOp.addUser(user);
-				JSONObject obj1=new JSONObject();
-				
-				if(obj!=null) 
-				{			
-					
-					log.info("User succesfully registered");
-					System.out.println("Origin: "+ origin);
-					
-					if(inboundAppId==null || !(inboundAppId.equals("malkarajtraining12")))
-					{
-			              final String uri="https://malkarajtraining12.uc.r.appspot.com/register";
-			              URL url=new URL(uri); 
-			              
-			              FetchOptions options = FetchOptions.Builder.withDefaults();
-			              options.setDeadline(10d);
-			              options.doNotFollowRedirects();
-			   			  HTTPRequest req = new HTTPRequest(url, HTTPMethod.POST,options);
-                          JSONObject reqObj=new JSONObject();
-						  reqObj.put("email", email);
-						  reqObj.put("password", pass);
-						  reqObj.put("user_id", id);
-						  req.setPayload(reqObj.toString().getBytes());
-						  req.addHeader(new HTTPHeader("Authorization", hash.calculateHMAC(sync.sentKey, reqObj.toString())));
-						  obj1=sync.sentRequest(req);
-						  //obj1=sync.sentRequest(url, reqObj);
-						  if(obj1.get("success").toString().equals("true"))
-							{
-								log.info("User succesfully registered in cross domain");
-								obj1.put("detail", obj);
-								response.setStatus(200);
-							}
-						  else
-							{
-								log.severe("User registration failed due to exceeding retry limit");
-								response.setStatus(500);
-							}						
-					}
-					else
-					{
-						obj1.put("success", true);
-						obj1.put("code", 200);
-						obj1.put("detail", obj);
-					}
-
-
-	
-				}
-				else
-				{	
-						log.severe("User already present");
-
-						obj1.put("message", "User already present");
-						response.setStatus(400);
-						obj1.put("success", false);
-						obj1.put("code",400);
-				}
-				out.println(obj1);
-	        }
-	        else
-	        {
-	            JSONObject obj=new JSONObject();
-	            response.setStatus(400);
-	            obj.put("success", false);
-	            obj.put("code", 400);
-	            obj.put("message", "Invalid email id");
-	            out.println(obj);
-
-	        }
-		} catch (Exception q) {
-            JSONObject obj=new JSONObject();
-            response.setStatus(400);
-            obj.put("success", false);
-            obj.put("code", 400);
-            obj.put("message", "Invalid user");
-            out.println(obj);
-
-			q.printStackTrace();
-		}
-              
-    }
+				out.println(resp);
+        
+		} 
+       catch(SocketTimeoutException s)
+       {
+           JSONObject obj=new JSONObject();
+           response.setStatus(500);
+           obj.put("success", false);
+           obj.put("code", 500);
+           obj.put("message", "Socket Timeout");
+           out.println(obj);   	
+       }
+       
+       
+       catch (Exception q) {
+          JSONObject obj=new JSONObject();
+          response.setStatus(400);
+          obj.put("success", false);
+          obj.put("code", 400);
+          obj.put("message", "Invalid user");
+          out.println(obj);
+          q.printStackTrace();
+	}
+             
+   }
 
     @Override
     protected void doOptions(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException 

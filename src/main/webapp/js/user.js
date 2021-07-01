@@ -87,7 +87,7 @@ var userRegister=()=>{
 var userRegister=()=>{
 		var xhr = new XMLHttpRequest();
 
-	xhr.open("POST", "https://georgefulltraining12.uc.r.appspot.com/register", true);
+	xhr.open("POST", "/register", true);
 	xhr.setRequestHeader('Content-Type', 'application/json');
 	var email=document.getElementById("email").value;
 	var pass=document.getElementById("password").value;
